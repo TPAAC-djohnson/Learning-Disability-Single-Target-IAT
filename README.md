@@ -1,43 +1,23 @@
-# Learning Disability Implicit Association Test (LD-IAT)
+# Learning Disability Single‑Target Implicit Association Test (ST‑IAT)
 
-This repository hosts a browser-based Implicit Association Test (IAT) focused on learning disabilities, built using **MinnoJS** and designed for deployment via **Qualtrics** or other survey platforms that support external JavaScript.
+This repository implements a **browser‑based Single‑Target Implicit Association Test (ST‑IAT)** focused on the concept of **Learning Disability**.  It uses the [MinnoJS](https://github.com/baranan/minno-js) IAT extension to collect reaction‑time data for measuring implicit associations between the target concept and two attribute categories (Positive vs Negative).
 
-## Overview
-The LD-IAT measures implicit associations related to learning disabilities by pairing:
-- Target categories (Learning Disabilities vs. No Learning Disabilities)
-- Attribute categories (Positive vs. Negative)
+## Folder structure
 
-The task is implemented using Project Implicit’s `iat10.js` extension.
+The project consists of three files:
 
-## Files
-- `learning_disability_single_iat.js`  
-  The main MinnoJS task definition file. This is the file loaded by Qualtrics or any HTML container.
+| File | Description |
+|-----|-------------|
+| `index.html` | Entry point.  Loads the MinnoJS runtime and starts the ST‑IAT. |
+| `learning_disability_single_iat.js` | AMD module defining the ST‑IAT logic, stimuli and styling.  At the end of the test a JSON download link appears with the participant’s data. |
+| `README.md` | This documentation explaining how to deploy and run the task. |
 
-## How It Is Used
-This repository does **not** require an `index.html` file when used with Qualtrics.
+## Running locally
 
-Typical flow:
-1. Participant enters a Qualtrics survey
-2. Qualtrics loads `learning_disability_single_iat.js`
-3. The IAT runs client-side in the browser
-4. Raw trial data are written back into a Qualtrics multiline text-entry field
+Because modern browsers restrict certain APIs when opening files directly from disk, it’s best to serve the files through a local web server:
 
-## Requirements
-- Desktop or laptop browser recommended
-- JavaScript enabled
-- HTTPS hosting (GitHub Pages, CDN, or institutional server)
+1. Clone or download this repository to your computer.
+2. From the project folder, start a simple web server (for example using Python):
 
-## Citation
-MinnoJS:
-Zlotnick, E., Dzikiewicz, A. J., & Bar-Anan, Y. (2015). Minno.js (Version 0.3) [Computer software].
-
-Qualtrics + Minno integration:
-Bengayev, E. (2020). Running Project Implicit’s ST-IAT from Qualtrics.
-
-## Notes
-- This repository is intended for research, pilot studies, and educational use.
-- No Qualtrics support is provided for MinnoJS scripts.
-- Researchers are responsible for IRB compliance and ethical review.
-
----
-
+   ```bash
+   python3 -m http.server

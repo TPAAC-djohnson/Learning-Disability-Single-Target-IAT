@@ -1,11 +1,30 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <!-- Load the MinnoJS IAT library from a CDN. You can host this yourself if your environment blocks external scripts. -->
-    <script src="https://cdn.jsdelivr.net/gh/minnojs/minno-tasks@latest/iat/IAT.js"></script>
-    <!-- Load the specific IAT configuration for learning disabilities. -->
-    <script src="learning_disability_single_iat.js"></script>
-  </head>
-  <body></body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Disability Single‑Target IAT</title>
+  <!--
+    Load RequireJS and the MinnoJS runtime.  RequireJS is used by MinnoJS
+    to resolve AMD modules defined in the task file.  The pi‑min script
+    includes the Project Implicit API (pipAPI) which powers the task.
+  -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/baranan/minno-tasks@0.*/dist/pi-min.js"></script>
+</head>
+<body>
+  <noscript>
+    <p>This task requires JavaScript to run. Please enable JavaScript in your browser.</p>
+  </noscript>
+  <!--
+    Once the page and dependencies have loaded, require the task definition.
+    The ST‑IAT will begin automatically after loading.
+  -->
+  <script>
+    require(['learning_disability_single_iat.js'], function() {
+      // The module runs itself when loaded; nothing else needs to be done here.
+    });
+  </script>
+</body>
 </html>
+
