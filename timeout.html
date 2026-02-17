@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-page="timeout">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Session Issue • Learning Disability IAT</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+
+<body>
+  <main>
+    <header class="site">
+      <div>
+        <div class="brand">Learning Disability IAT</div>
+        <div class="small">Study access & session troubleshooting</div>
+      </div>
+      <div class="progress"></div>
+    </header>
+
+    <section class="card">
+      <h1>Session issue</h1>
+
+      <p class="notice warn">
+        Your study session may have timed out, or your browser may be blocking storage (cookies/local data) needed to run the task.
+      </p>
+
+      <h2>Most common causes</h2>
+      <ul>
+        <li><strong>Opened an incorrect link</strong> (or used an old bookmark).</li>
+        <li><strong>Refreshed</strong> the page during the task.</li>
+        <li><strong>Private browsing mode</strong> or strict privacy settings blocked site storage.</li>
+        <li>Your <strong>network/IP changed</strong> during the session (some networks do this).</li>
+      </ul>
+
+      <h2>How to fix it</h2>
+      <ol>
+        <li>Close this tab.</li>
+        <li>Open the study from the main entry page.</li>
+        <li>If it happens again, enable cookies / site storage for this domain and try again.</li>
+      </ol>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
+        <a class="btn primary" href="index.html">Return to Study Home</a>
+        <a class="btn ghost" href="privacy.html">Data Privacy</a>
+        <a class="btn ghost" href="help.html">Help</a>
+      </div>
+
+      <hr />
+
+      <details>
+        <summary class="small">Technical details (for troubleshooting)</summary>
+        <div class="small" style="margin-top:10px; line-height:1.5;">
+          <div><strong>Storage enabled:</strong> <span id="storage-ok">Checking…</span></div>
+          <div><strong>User agent:</strong> <span id="ua"></span></div>
+          <div><strong>Time:</strong> <span id="now"></span></div>
+        </div>
+      </details>
+    </section>
+
+    <div class="footer-links">
+      <a href="contact.html">Contact</a>
+      <a href="about.html">About</a>
+      <a href="disclaimer.html">Disclaimer</a>
+    </div>
+  </main>
+
+  <script>
+    // Simple storage check (localStorage is what your study uses)
+    const ua = document.getElementById("ua");
+    const now = document.getElementById("now");
+    const storageOk = document.getElementById("storage-ok");
+
+    ua.textContent = navigator.userAgent;
+    now.textContent = new Date().toISOString();
+
+    try {
+      const k = "__storage_test__";
+      localStorage.setItem(k, "1");
+      localStorage.removeItem(k);
+      storageOk.textContent = "Yes";
+    } catch (e) {
+      storageOk.textContent = "No (blocked by browser settings)";
+    }
+  </script>
+</body>
+</html>
