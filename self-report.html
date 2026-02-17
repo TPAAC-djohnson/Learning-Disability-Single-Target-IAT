@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en" data-page="self-report">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Questionnaire • Learning Disability IAT</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <main>
+    <header class="site">
+      <div>
+        <div class="brand">Questionnaire</div>
+        <div class="small">Brief self-report</div>
+      </div>
+      <div class="progress" data-progress></div>
+    </header>
+
+    <section class="card">
+      <h1>Self-report questions</h1>
+      <p>Please answer the following items. Skip any you do not wish to answer.</p>
+
+      <form id="form">
+        <h2>1) My overall attitude toward learning disability is:</h2>
+        <select name="attitude" required>
+          <option value="" selected disabled>Choose one</option>
+          <option>Very negative</option>
+          <option>Somewhat negative</option>
+          <option>Neutral</option>
+          <option>Somewhat positive</option>
+          <option>Very positive</option>
+        </select>
+
+        <h2>2) I have personal experience with learning disability:</h2>
+        <select name="experience" required>
+          <option value="" selected disabled>Choose one</option>
+          <option>Yes</option>
+          <option>No</option>
+          <option>Prefer not to say</option>
+        </select>
+
+        <h2>3) I believe my responses were:</h2>
+        <select name="effort" required>
+          <option value="" selected disabled>Choose one</option>
+          <option>Careful and attentive</option>
+          <option>Somewhat attentive</option>
+          <option>Not very attentive</option>
+        </select>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">Continue</button>
+          <a class="btn ghost" href="exit.html">Exit</a>
+        </div>
+      </form>
+
+      <hr>
+      <div class="small">Anonymous session code: <span class="kbd" data-session-id></span></div>
+    </section>
+
+    <div class="footer-links">
+      <button class="btn ghost" data-action="reset" type="button">Reset local session</button>
+    </div>
+  </main>
+
+  <script type="module">
+    import { updateState } from "./js/state.js";
+    import "./js/app.js";
+
+    const form = document.getElementById("form");
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const data = Object.fromEntries(fd.entries());
+
+      updateState(s => { s.selfReport = data; return s; });
+      window.location.href = "results.html";
+    });
+  </script>
+</body>
+</html>
