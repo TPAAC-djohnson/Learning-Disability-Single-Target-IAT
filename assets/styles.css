@@ -154,3 +154,115 @@ code.inline{
   color:var(--muted);
   font-family:var(--mono);
 }
+/* ---------- IAT Task UI ---------- */
+.iat-shell{
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.iat-top{
+  display:flex;
+  justify-content:space-between;
+  gap: 16px;
+  margin: 8px 0 18px;
+}
+
+.iat-cat{
+  flex: 1;
+  background: #fff;
+  border: 2px solid #111;
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-height: 74px;
+}
+
+.iat-cat .title{
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: .2px;
+}
+
+.iat-cat .sub{
+  margin-top: 6px;
+  color: #111;
+  font-size: 14px;
+  opacity: .85;
+}
+
+.iat-cat.right{
+  text-align:right;
+}
+
+.iat-stage{
+  background:#fff;
+  border: 2px solid #111;
+  border-radius: 16px;
+  padding: 24px 16px;
+  min-height: 220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.iat-stimulus{
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  text-align:center;
+  padding: 8px 12px;
+}
+
+.iat-stimulus.small{
+  font-size: 36px;
+}
+
+.iat-keys{
+  display:flex;
+  justify-content:space-between;
+  margin-top: 14px;
+  font-family: var(--mono);
+  color: #111;
+}
+
+.iat-keys .k{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.iat-keys .hint{
+  font-size: 14px;
+  opacity: .8;
+}
+
+.iat-kbd{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 44px;
+  height: 36px;
+  border: 2px solid #111;
+  border-bottom-width: 4px;
+  border-radius: 10px;
+  background:#fff;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+/* Big, obvious error X like classic IATs */
+.iat-errorX{
+  color:#b91c1c;
+  font-weight: 900;
+  font-size: 56px;
+  line-height: 1;
+}
+
+/* Make jsPsych content feel "full screen" clean */
+#jspsych-target{
+  width:100%;
+}
+
+.jspsych-content{
+  max-width: none !important;
+}
