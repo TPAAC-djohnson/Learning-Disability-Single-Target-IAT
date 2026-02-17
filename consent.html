@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" data-page="consent">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Consent • Learning Disability IAT</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <main>
+    <header class="site">
+      <div>
+        <div class="brand">Consent</div>
+        <div class="small">Please read carefully</div>
+      </div>
+      <div class="progress" data-progress></div>
+    </header>
+
+    <section class="card">
+      <h1>Consent to participate</h1>
+      <p>This task is voluntary. You may stop at any time by closing the browser window.</p>
+      <p>This study is intended to collect anonymous task performance and brief self-report responses. This is not a diagnostic test.</p>
+
+      <div class="notice warn">
+        If you are not comfortable encountering possible interpretations of your task performance, please do not continue.
+      </div>
+
+      <label style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;">
+        <input id="agree" type="checkbox" />
+        <span>I am at least 18 years old (or otherwise eligible under the study protocol), I have read the information above, and I consent to participate.</span>
+      </label>
+
+      <div class="actions">
+        <button id="continue" class="btn primary" disabled type="button">I agree, begin</button>
+        <a class="btn ghost" href="exit.html">I do not agree</a>
+      </div>
+
+      <hr>
+      <div class="small">Anonymous session code: <span class="kbd" data-session-id></span></div>
+    </section>
+
+    <div class="footer-links">
+      <a href="privacy.html">Privacy details</a>
+      <button class="btn ghost" data-action="reset" type="button">Reset local session</button>
+    </div>
+  </main>
+
+  <script type="module">
+    import { updateState } from "./js/state.js";
+    import "./js/app.js";
+
+    const agree = document.getElementById("agree");
+    const cont = document.getElementById("continue");
+
+    agree.addEventListener("change", () => {
+      cont.disabled = !agree.checked;
+    });
+
+    cont.addEventListener("click", () => {
+      updateState(s => {
+        s.consented = true;
+        return s;
+      });
+      window.location.href = "tech-check.html";
+    });
+  </script>
+</body>
+</html>
