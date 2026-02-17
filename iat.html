@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" data-page="iat">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IAT • Learning Disability IAT</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <main>
+    <header class="site">
+      <div>
+        <div class="brand">IAT Task</div>
+        <div class="small">Do not use the browser back button during the task</div>
+      </div>
+      <div class="progress" data-progress></div>
+    </header>
+
+    <section class="card">
+      <h1>Task</h1>
+      <p class="notice warn">
+        This is a <strong>stub</strong> task runner for end-to-end testing of site flow.
+        We will replace this with a real Single-Target IAT engine.
+      </p>
+
+      <div class="actions">
+        <button id="runIat" class="btn primary" type="button">Run task (stub)</button>
+        <a class="btn ghost" href="exit.html">Exit</a>
+      </div>
+
+      <hr>
+      <div id="iatStatus" class="small">Not started.</div>
+
+      <div class="actions" style="margin-top:12px;">
+        <a id="toSelfReport" class="btn primary" href="self-report.html" style="display:none;">Continue to questionnaire</a>
+      </div>
+    </section>
+
+    <div class="footer-links">
+      <button class="btn ghost" data-action="reset" type="button">Reset local session</button>
+    </div>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/iat-stub.js"></script>
+</body>
+</html>
