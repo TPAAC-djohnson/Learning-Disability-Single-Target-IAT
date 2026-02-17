@@ -1,0 +1,24 @@
+/ (repo root)
+  index.html
+  consent.html
+  tech-check.html
+  instructions.html
+  practice.html
+  iat.html
+  self-report.html
+  results.html
+  submit.html
+  thank-you.html
+  exit.html
+  privacy.html
+  contact.html
+
+  /assets
+    styles.css
+
+  /js
+    app.js
+    state.js
+    techcheck.js
+    iat-stub.js
+    submit.js
