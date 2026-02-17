@@ -108,34 +108,7 @@ function renderIATScreen({ leftTitle, leftSub, rightTitle, rightSub, stimulus })
     /**********************************************************************
      * HELPERS
      **********************************************************************/
-function renderIATScreen({ leftTitle, leftSub, rightTitle, rightSub, stimulus }) {
-  const stimClass = (String(stimulus).length > 14) ? "iat-stimulus small" : "iat-stimulus";
-  return `
-    <div class="iat-shell">
-      <div class="iat-top">
-        <div class="iat-cat left">
-          <div class="title">${leftTitle}</div>
-          ${leftSub ? `<div class="sub">${leftSub}</div>` : ``}
-        </div>
-        <div class="iat-cat right">
-          <div class="title">${rightTitle}</div>
-          ${rightSub ? `<div class="sub">${rightSub}</div>` : ``}
-        </div>
-      </div>
-
-      <div class="iat-stage">
-        <div class="${stimClass}">${stimulus}</div>
-      </div>
-
-      <div class="iat-keys">
-        <div class="k"><span class="iat-kbd">E</span><span class="hint">Left</span></div>
-        <div class="k"><span class="hint">Right</span><span class="iat-kbd">I</span></div>
-      </div>
-    </div>
-  `;
-}
-
-    function shuffle(arr){
+function shuffle(arr){
       const a = arr.slice();
       for (let i=a.length-1; i>0; i--){
         const j = Math.floor(Math.random()*(i+1));
