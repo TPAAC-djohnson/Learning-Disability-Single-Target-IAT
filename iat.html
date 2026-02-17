@@ -3,45 +3,449 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>IAT • Learning Disability IAT</title>
+  <title>ST-IAT • Learning Disability IAT</title>
   <link rel="stylesheet" href="assets/styles.css" />
+
+  <!-- jsPsych core + CSS (CDN) -->
+  <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" />
+  <script src="https://unpkg.com/jspsych@7.3.4"></script>
+
+  <!-- Plugins -->
+  <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-categorize-html@1.1.3"></script>
 </head>
+
 <body>
   <main>
     <header class="site">
       <div>
         <div class="brand">IAT Task</div>
-        <div class="small">Do not use the browser back button during the task</div>
+        <div class="small">Use <span class="kbd">E</span> (left) and <span class="kbd">I</span> (right)</div>
       </div>
       <div class="progress" data-progress></div>
     </header>
 
     <section class="card">
-      <h1>Task</h1>
+      <h1>Single-Target IAT</h1>
       <p class="notice warn">
-        This is a <strong>stub</strong> task runner for end-to-end testing of site flow.
-        We will replace this with a real Single-Target IAT engine.
+        Do not use the browser back button during the task. If you need to stop, you may close the page.
       </p>
 
-      <div class="actions">
-        <button id="runIat" class="btn primary" type="button">Run task (stub)</button>
-        <a class="btn ghost" href="exit.html">Exit</a>
-      </div>
+      <!-- jsPsych renders inside this -->
+      <div id="jspsych-target"></div>
 
-      <hr>
-      <div id="iatStatus" class="small">Not started.</div>
-
-      <div class="actions" style="margin-top:12px;">
-        <a id="toSelfReport" class="btn primary" href="self-report.html" style="display:none;">Continue to questionnaire</a>
-      </div>
+      <hr />
+      <div class="small">Anonymous session code: <span class="kbd" data-session-id></span></div>
     </section>
 
     <div class="footer-links">
+      <a href="exit.html">Exit</a>
       <button class="btn ghost" data-action="reset" type="button">Reset local session</button>
     </div>
   </main>
 
-  <script type="module" src="js/app.js"></script>
-  <script type="module" src="js/iat-stub.js"></script>
+  <script type="module">
+    import "./js/app.js";
+    import { updateState, loadState } from "./js/state.js";
+
+    /**********************************************************************
+     * CONFIG YOU SHOULD EDIT (labels + stimuli)
+     **********************************************************************/
+
+    const KEYS = { left: "e", right: "i" };
+
+    // Target label (single target)
+    const TARGET_LABEL = "Learning Disability";
+
+    // Attribute labels
+    const ATTR_POS_LABEL = "Good";
+    const ATTR_NEG_LABEL = "Bad";
+
+    // IMPORTANT: Define which mapping you want to treat as "congruent"
+    // for scoring sign. If your theoretical "congruent" is LD+Bad vs Good,
+    // leave as 'LD+NEG'. If you want LD+Good vs Bad as congruent, set 'LD+POS'.
+    const CONGRUENT_MAPPING = "LD+NEG"; // 'LD+NEG' or 'LD+POS'
+
+    // Stimuli (placeholders—swap with your vetted word lists)
+    // Keep them simple, unambiguous, culturally neutral.
+    const TARGET_STIM = [
+      "dyslexia","dysgraphia","dyscalculia","processing disorder",
+      "learning difficulty","reading support","special education","IEP"
+    ];
+
+    const POS_STIM = [
+      "joy","peace","love","good","friendly","wonderful","pleasant","excellent"
+    ];
+
+    const NEG_STIM = [
+      "hate","bad","awful","terrible","nasty","horrible","unpleasant","evil"
+    ];
+
+    /**********************************************************************
+     * HELPERS
+     **********************************************************************/
+
+    function shuffle(arr){
+      const a = arr.slice();
+      for (let i=a.length-1; i>0; i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+      return a;
+    }
+
+    function pickTrials(stimuli, n){
+      // sample with replacement if n > stimuli length
+      const out = [];
+      for (let i=0; i<n; i++){
+        out.push(stimuli[i % stimuli.length]);
+      }
+      return shuffle(out);
+    }
+
+    // Build "trial objects" for categorize-html:
+    // Each trial has stimulus text and a "correct_category"
+    function makeCategorizeTrials(words, category){
+      return words.map(w => ({ stimulus: w, correct_category: category }));
+    }
+
+    function blockHeaderHTML(leftTop, leftBottom, rightTop, rightBottom){
+      return `
+        <div style="display:flex; justify-content:space-between; font-size:18px; margin-bottom:12px;">
+          <div style="width:45%; text-align:left;">
+            <div><strong>${leftTop}</strong></div>
+            ${leftBottom ? `<div class="small">${leftBottom}</div>` : ``}
+          </div>
+          <div style="width:45%; text-align:right;">
+            <div><strong>${rightTop}</strong></div>
+            ${rightBottom ? `<div class="small">${rightBottom}</div>` : ``}
+          </div>
+        </div>
+      `;
+    }
+
+    // Error penalty scoring: correct RT unchanged; incorrect RT = RT + 600ms
+    function penaltyRt(trial){
+      const rt = trial.rt;
+      if (rt == null) return null;
+      return trial.correct ? rt : (rt + 600);
+    }
+
+    // D-score: (Mean_incong - Mean_cong) / SD_all
+    function computeDScore(trials, blockNamesCong, blockNamesIncong){
+      const keep = trials.filter(t =>
+        (blockNamesCong.includes(t.block) || blockNamesIncong.includes(t.block))
+        && typeof t.rt === "number"
+        && t.rt >= 300 && t.rt <= 10000
+      );
+
+      // if too many ultra-fast responses, many IATs flag; we’ll compute a flag.
+      const fastCount = keep.filter(t => t.rt < 300).length;
+      const fastFlag = (fastCount / Math.max(1, keep.length)) > 0.10;
+
+      const cong = keep.filter(t => blockNamesCong.includes(t.block)).map(penaltyRt).filter(x=>x!=null);
+      const incong = keep.filter(t => blockNamesIncong.includes(t.block)).map(penaltyRt).filter(x=>x!=null);
+      const all = cong.concat(incong);
+
+      const mean = arr => arr.reduce((a,b)=>a+b,0) / Math.max(1, arr.length);
+      const sd = arr => {
+        const m = mean(arr);
+        const v = arr.reduce((acc,x)=>acc + Math.pow(x-m,2),0) / Math.max(1, arr.length-1);
+        return Math.sqrt(v);
+      };
+
+      const mCong = mean(cong);
+      const mIncong = mean(incong);
+      const sdAll = sd(all);
+
+      const D = sdAll > 0 ? (mIncong - mCong) / sdAll : null;
+
+      return {
+        D,
+        meanCong: Math.round(mCong),
+        meanIncong: Math.round(mIncong),
+        sdAll: Math.round(sdAll),
+        nTrialsUsed: keep.length,
+        fastFlag
+      };
+    }
+
+    /**********************************************************************
+     * COUNTERBALANCING
+     **********************************************************************/
+
+    // Two combined conditions in ST-IAT:
+    // Condition A: (LD + POS) vs (NEG)
+    // Condition B: (LD + NEG) vs (POS)
+    //
+    // We counterbalance which combined condition comes first.
+    const order = (Math.random() < 0.5) ? "A_then_B" : "B_then_A";
+
+    const conditionA = {
+      name: "LD+POS_vs_NEG",
+      left: `${TARGET_LABEL} + ${ATTR_POS_LABEL}`,
+      right: `${ATTR_NEG_LABEL}`,
+      // correct categories:
+      leftCats: ["TARGET", "POS"],
+      rightCats: ["NEG"]
+    };
+
+    const conditionB = {
+      name: "LD+NEG_vs_POS",
+      left: `${TARGET_LABEL} + ${ATTR_NEG_LABEL}`,
+      right: `${ATTR_POS_LABEL}`,
+      leftCats: ["TARGET", "NEG"],
+      rightCats: ["POS"]
+    };
+
+    const firstCombined = (order === "A_then_B") ? conditionA : conditionB;
+    const secondCombined = (order === "A_then_B") ? conditionB : conditionA;
+
+    // For scoring: decide which combined condition is "congruent"
+    // Congruent blocks will be whichever condition matches CONGRUENT_MAPPING
+    // CONGRUENT_MAPPING: 'LD+NEG' => conditionB congruent; 'LD+POS' => conditionA congruent
+    const congruentCondition = (CONGRUENT_MAPPING === "LD+NEG") ? conditionB : conditionA;
+    const incongruentCondition = (CONGRUENT_MAPPING === "LD+NEG") ? conditionA : conditionB;
+
+    /**********************************************************************
+     * TRIAL GENERATION
+     **********************************************************************/
+
+    // Block sizes (common-ish defaults; adjust as needed)
+    const N_ATTR_PRACTICE = 20;
+    const N_COMBINED_PRACTICE = 20;
+    const N_COMBINED_TEST = 40;
+
+    // Attribute-only practice: POS vs NEG
+    const attrPracticeTrials = shuffle(
+      makeCategorizeTrials(pickTrials(POS_STIM, N_ATTR_PRACTICE/2), "POS")
+      .concat(makeCategorizeTrials(pickTrials(NEG_STIM, N_ATTR_PRACTICE/2), "NEG"))
+    );
+
+    // For combined blocks, we mix TARGET with one attribute on one key and the other attribute alone on the other key
+    function makeCombinedTrials(nTotal, combined){
+      const half = Math.floor(nTotal/2);
+
+      // left gets TARGET + (POS or NEG depending on combined.leftCats)
+      const leftTrials = [];
+      const rightTrials = [];
+
+      // build pools
+      const targetWords = pickTrials(TARGET_STIM, Math.floor(nTotal/3));
+      const posWords = pickTrials(POS_STIM, Math.floor(nTotal/3));
+      const negWords = pickTrials(NEG_STIM, Math.floor(nTotal/3));
+
+      // We’ll allocate approx evenly among the three categories that appear in the block.
+      // Categories that belong on left: combined.leftCats; on right: combined.rightCats.
+      // For ST-IAT, rightCats is a single attribute.
+      const makeCat = (w, cat) => ({ stimulus: w, correct_category: cat });
+
+      // Compose all candidate trials
+      const all = [];
+      for (const w of targetWords) all.push(makeCat(w, "TARGET"));
+      for (const w of posWords) all.push(makeCat(w, "POS"));
+      for (const w of negWords) all.push(makeCat(w, "NEG"));
+
+      // If we need more, sample with replacement
+      while (all.length < nTotal){
+        all.push(makeCat(TARGET_STIM[Math.floor(Math.random()*TARGET_STIM.length)], "TARGET"));
+      }
+
+      // Trim and shuffle
+      const trials = shuffle(all).slice(0, nTotal);
+      return trials;
+    }
+
+    // Determine correct key for each category in a combined condition
+    function correctKeyForCategory(cat, combined){
+      if (combined.leftCats.includes(cat)) return KEYS.left;
+      if (combined.rightCats.includes(cat)) return KEYS.right;
+      throw new Error("Category not mapped: " + cat);
+    }
+
+    /**********************************************************************
+     * BUILD jsPsych TIMELINE
+     **********************************************************************/
+
+    const jsPsych = initJsPsych({
+      display_element: "jspsych-target",
+      on_finish: async () => {
+        const data = jsPsych.data.get().values();
+
+        // Extract categorize trials only
+        const catTrials = data.filter(d => d.trial_type === "categorize-html" && d.block);
+
+        // Compute D using combined practice+test blocks for congruent vs incongruent condition
+        const blocksCong = [
+          `${congruentCondition.name}_practice`,
+          `${congruentCondition.name}_test`
+        ];
+        const blocksIncong = [
+          `${incongruentCondition.name}_practice`,
+          `${incongruentCondition.name}_test`
+        ];
+
+        const score = computeDScore(catTrials, blocksCong, blocksIncong);
+
+        // Save into your existing state structure
+        updateState(s => {
+          s.iat.trials = catTrials.map(t => ({
+            block: t.block,
+            condition: t.condition,
+            stimulus: t.stimulus,
+            category: t.category,
+            correct: t.correct,
+            rt: t.rt,
+            key_press: t.key_press,
+            ts: new Date().toISOString()
+          }));
+          s.iat.summary = {
+            kind: "jsPsych ST-IAT",
+            order,
+            congruentMapping: CONGRUENT_MAPPING,
+            D: score.D,
+            meanCong: score.meanCong,
+            meanIncong: score.meanIncong,
+            sdAll: score.sdAll,
+            nTrialsUsed: score.nTrialsUsed,
+            fastFlag: score.fastFlag
+          };
+          return s;
+        });
+
+        // Route forward
+        window.location.href = "self-report.html";
+      }
+    });
+
+    // Preload (optional, mostly for images; here it's basically a no-op)
+    const preload = {
+      type: jsPsychPreload,
+      auto_preload: true
+    };
+
+    const welcome = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: `
+        <div class="card" style="border:none; box-shadow:none;">
+          <h2 style="margin-top:0;">Instructions</h2>
+          <p>Respond as quickly and accurately as possible.</p>
+          <p>Use <span class="kbd">E</span> for LEFT and <span class="kbd">I</span> for RIGHT.</p>
+          <p>Press any key to continue.</p>
+        </div>
+      `
+    };
+
+    const attrInstr = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: () => `
+        ${blockHeaderHTML(ATTR_POS_LABEL, "", ATTR_NEG_LABEL, "")}
+        <p>Practice: categorize words as <strong>${ATTR_POS_LABEL}</strong> or <strong>${ATTR_NEG_LABEL}</strong>.</p>
+        <p>LEFT: <span class="kbd">E</span> • RIGHT: <span class="kbd">I</span></p>
+        <p>Press any key to begin.</p>
+      `
+    };
+
+    const attrPractice = {
+      timeline: [{
+        type: jsPsychCategorizeHtml,
+        stimulus: jsPsych.timelineVariable("stimulus"),
+        key_answer: () => jsPsych.timelineVariable("key_answer"),
+        choices: [KEYS.left, KEYS.right],
+        show_stim_with_feedback: true,
+        feedback_duration: 250,
+        correct_text: "",
+        incorrect_text: "<div style='color:#b91c1c; font-weight:700;'>X</div>",
+        prompt: () => blockHeaderHTML(ATTR_POS_LABEL, "", ATTR_NEG_LABEL, ""),
+        data: () => ({
+          block: "ATTR_practice",
+          condition: "ATTR",
+          category: jsPsych.timelineVariable("category"),
+        })
+      }],
+      timeline_variables: attrPracticeTrials.map(t => ({
+        stimulus: `<div style="font-size:34px; font-family:var(--sans);">${t.stimulus}</div>`,
+        category: t.correct_category,
+        key_answer: (t.correct_category === "POS") ? KEYS.left : KEYS.right
+      }))
+    };
+
+    function combinedInstructions(combined, phaseLabel){
+      return {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: () => `
+          ${blockHeaderHTML(combined.left, "", combined.right, "")}
+          <p>${phaseLabel}: Press <span class="kbd">E</span> for <strong>${combined.left}</strong> and <span class="kbd">I</span> for <strong>${combined.right}</strong>.</p>
+          <p>Press any key to begin.</p>
+        `
+      };
+    }
+
+    function combinedBlock(combined, blockName, nTrials){
+      const trials = makeCombinedTrials(nTrials, combined);
+
+      // Convert to timeline variables with correct key based on category mapping
+      const vars = trials.map(t => {
+        const cat = t.correct_category; // TARGET, POS, NEG
+        const key = correctKeyForCategory(cat, combined);
+        return {
+          stimulus: `<div style="font-size:34px;">${t.stimulus}</div>`,
+          category: cat,
+          key_answer: key
+        };
+      });
+
+      return {
+        timeline: [{
+          type: jsPsychCategorizeHtml,
+          stimulus: jsPsych.timelineVariable("stimulus"),
+          key_answer: () => jsPsych.timelineVariable("key_answer"),
+          choices: [KEYS.left, KEYS.right],
+          show_stim_with_feedback: true,
+          feedback_duration: 250,
+          correct_text: "",
+          incorrect_text: "<div style='color:#b91c1c; font-weight:700;'>X</div>",
+          prompt: () => blockHeaderHTML(combined.left, "", combined.right, ""),
+          data: () => ({
+            block: blockName,
+            condition: combined.name,
+            category: jsPsych.timelineVariable("category"),
+          })
+        }],
+        timeline_variables: vars
+      };
+    }
+
+    // Build timeline with counterbalanced order:
+    // 1) Attribute practice
+    // 2) Combined (first) practice + test
+    // 3) Combined (second) practice + test
+    const timeline = [];
+
+    timeline.push(preload, welcome, attrInstr, attrPractice);
+
+    // First combined condition
+    timeline.push(
+      combinedInstructions(firstCombined, "Practice"),
+      combinedBlock(firstCombined, `${firstCombined.name}_practice`, N_COMBINED_PRACTICE),
+      combinedInstructions(firstCombined, "Test"),
+      combinedBlock(firstCombined, `${firstCombined.name}_test`, N_COMBINED_TEST)
+    );
+
+    // Second combined condition
+    timeline.push(
+      combinedInstructions(secondCombined, "Practice"),
+      combinedBlock(secondCombined, `${secondCombined.name}_practice`, N_COMBINED_PRACTICE),
+      combinedInstructions(secondCombined, "Test"),
+      combinedBlock(secondCombined, `${secondCombined.name}_test`, N_COMBINED_TEST)
+    );
+
+    // Anti-back soft lock
+    history.pushState(null, "", location.href);
+    window.addEventListener("popstate", () => history.pushState(null, "", location.href));
+
+    jsPsych.run(timeline);
+  </script>
 </body>
 </html>
