@@ -48,10 +48,33 @@
   <script type="module">
     import "./js/app.js";
     import { updateState, loadState } from "./js/state.js";
+    
+function renderIATScreen({ leftTitle, leftSub, rightTitle, rightSub, stimulus }) {
+  const stimClass = (String(stimulus).length > 14) ? "iat-stimulus small" : "iat-stimulus";
+  return `
+    <div class="iat-shell">
+      <div class="iat-top">
+        <div class="iat-cat left">
+          <div class="title">${leftTitle}</div>
+          ${leftSub ? `<div class="sub">${leftSub}</div>` : ``}
+        </div>
+        <div class="iat-cat right">
+          <div class="title">${rightTitle}</div>
+          ${rightSub ? `<div class="sub">${rightSub}</div>` : ``}
+        </div>
+      </div>
 
-    /**********************************************************************
-     * CONFIG YOU SHOULD EDIT (labels + stimuli)
-     **********************************************************************/
+      <div class="iat-stage">
+        <div class="${stimClass}">${stimulus}</div>
+      </div>
+
+      <div class="iat-keys">
+        <div class="k"><span class="iat-kbd">E</span><span class="hint">Left</span></div>
+        <div class="k"><span class="hint">Right</span><span class="iat-kbd">I</span></div>
+      </div>
+    </div>
+  `;
+}
 
     const KEYS = { left: "e", right: "i" };
 
@@ -391,7 +414,13 @@ function renderIATScreen({ leftTitle, leftSub, rightTitle, rightSub, stimulus })
         })
       }],
       timeline_variables: attrPracticeTrials.map(t => ({
-        stimulus: `<div style="font-size:34px; font-family:var(--sans);">${t.stimulus}</div>`,
+        stimulus: renderIATScreen({
+          leftTitle: ATTR_POS_LABEL,
+          leftSub: "",
+          rightTitle: ATTR_NEG_LABEL,
+          rightSub: "",
+          stimulus: t.stimulus
+        }),
         category: t.correct_category,
         key_answer: (t.correct_category === "POS") ? KEYS.left : KEYS.right
       }))
@@ -416,7 +445,13 @@ function renderIATScreen({ leftTitle, leftSub, rightTitle, rightSub, stimulus })
         const cat = t.correct_category; // TARGET, POS, NEG
         const key = correctKeyForCategory(cat, combined);
         return {
-          stimulus: `<div style="font-size:34px;">${t.stimulus}</div>`,
+          stimulus: renderIATScreen({
+            leftTitle: combined.left,
+            leftSub: "",
+            rightTitle: combined.right,
+            rightSub: "",
+            stimulus: t.stimulus
+          }),
           category: cat,
           key_answer: key
         };
@@ -431,7 +466,7 @@ function renderIATScreen({ leftTitle, leftSub, rightTitle, rightSub, stimulus })
           show_stim_with_feedback: true,
           feedback_duration: 250,
           correct_text: "",
-          incorrect_text: "<div style='color:#b91c1c; font-weight:700;'>X</div>",
+          incorrect_text: `<div class="iat-errorX">X</div>`,
           prompt: () => blockHeaderHTML(combined.left, "", combined.right, ""),
           data: () => ({
             block: blockName,
