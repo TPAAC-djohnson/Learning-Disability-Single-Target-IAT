@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-page="tech-check">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tech Check • Learning Disability IAT</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <main>
+    <header class="site">
+      <div>
+        <div class="brand">Tech check</div>
+        <div class="small">Device readiness</div>
+      </div>
+      <div class="progress" data-progress></div>
+    </header>
+
+    <section class="card">
+      <h1>Device and input check</h1>
+      <p>This task works best on a desktop/laptop with a physical keyboard.</p>
+      <div id="techResults"></div>
+
+      <div class="actions">
+        <a class="btn primary" href="instructions.html">Continue</a>
+        <a class="btn ghost" href="exit.html">Exit</a>
+      </div>
+    </section>
+
+    <div class="footer-links">
+      <a href="privacy.html">Privacy</a>
+      <button class="btn ghost" data-action="reset" type="button">Reset local session</button>
+    </div>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/techcheck.js"></script>
+</body>
+</html>
