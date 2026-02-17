@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" data-page="results">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Results • Learning Disability IAT</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <main>
+    <header class="site">
+      <div>
+        <div class="brand">Results</div>
+        <div class="small">Feedback summary</div>
+      </div>
+      <div class="progress" data-progress></div>
+    </header>
+
+    <section class="card">
+      <h1>Your results</h1>
+
+      <div id="resultsBox" class="notice">
+        Loading…
+      </div>
+
+      <h2>Interpretation caution</h2>
+      <p>This feedback is descriptive and based on general research patterns. It does not diagnose beliefs, bias, or any condition, and should not be treated as a personal evaluation.</p>
+
+      <div class="actions">
+        <a class="btn primary" href="submit.html">Continue</a>
+        <a class="btn ghost" href="exit.html">Exit</a>
+      </div>
+
+      <hr>
+      <div class="small">Anonymous session code: <span class="kbd" data-session-id></span></div>
+    </section>
+
+    <div class="footer-links">
+      <button class="btn ghost" data-action="reset" type="button">Reset local session</button>
+    </div>
+  </main>
+
+  <script type="module">
+    import { loadState } from "./js/state.js";
+    import "./js/app.js";
+
+    const s = loadState();
+    const box = document.getElementById("resultsBox");
+
+    const sum = s?.iat?.summary;
+    if (!sum) {
+      box.className = "notice warn";
+      box.innerHTML = "No task data found in this browser session.";
+    } else {
+      box.className = "notice ok";
+      box.innerHTML = `
+        <div><strong>Task summary (placeholder):</strong></div>
+        <div>Mean correct RT: <span class="kbd">${sum.meanRtMs} ms</span></div>
+        <div>Error rate: <span class="kbd">${Math.round(sum.errorRate*100)}%</span></div>
+        <div>Score (stub): <span class="kbd">${sum.placeholderScore}</span></div>
+      `;
+    }
+  </script>
+</body>
+</html>
